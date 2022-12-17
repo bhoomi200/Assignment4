@@ -24,25 +24,32 @@ namespace StudentWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Student>>> GetStudents()
         {
-            return await _context.Students.ToListAsync();
+            
+            var students =await _context.Students
+                                         .Include(stu => stu.Subjects)
+                                         .ToListAsync();
+            return students;
         }
 
         // GET: api/Students/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Student>> GetStudent(int id)
         {
-            var student = await _context.Students.FindAsync(id);
+            var students =await _context.Students
+                                          .Include(_stu => _stu.Subjects)
+                                          .Where(_stu => _stu.StudentId == id)
+                                          .FirstOrDefaultAsync();
 
-            if (student == null)
+            if (students == null)
             {
                 return NotFound();
             }
 
-            return student;
+            return students;
         }
 
         // PUT: api/Students/5
-        
+
         [HttpPut("{id}")]
         public async Task<IActionResult> PutStudent(int id, Student student)
         {
@@ -50,12 +57,11 @@ namespace StudentWebApi.Controllers
             {
                 return BadRequest();
             }
-
-            _context.Entry(student).State = EntityState.Modified;
-
             try
             {
+                _context.Students.Update(student);
                 await _context.SaveChangesAsync();
+                return CreatedAtAction("GetStudent", new { id = student.StudentId }, student);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -68,8 +74,6 @@ namespace StudentWebApi.Controllers
                     throw;
                 }
             }
-
-            return NoContent();
         }
 
         // POST: api/Students
@@ -85,7 +89,7 @@ namespace StudentWebApi.Controllers
 
         // DELETE: api/Students/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteStudent(int id)
+        public async Task<ActionResult<Student>> DeleteStudent(int id)
         {
             var student = await _context.Students.FindAsync(id);
             if (student == null)
@@ -96,7 +100,7 @@ namespace StudentWebApi.Controllers
             _context.Students.Remove(student);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return student;
         }
 
         private bool StudentExists(int id)

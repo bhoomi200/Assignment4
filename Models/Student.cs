@@ -13,5 +13,5 @@ public partial class Student
 
     public string StudentClass { get; set; } = null!;
 
-    public virtual ICollection<Subject> Subjects { get; } = new List<Subject>();
+    public virtual ICollection<Subject> Subjects {get; set; }
 }
